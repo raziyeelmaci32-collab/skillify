@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skillify</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body {font-family: Arial; margin:0; background:linear-gradient(to right,#ffd6eb,#ffe6f5); text-align:center;}
+header {background:#ff66b2; color:white; padding:25px; font-size:24px;}
+nav {background:#ffb3d9; padding:15px;}
+nav button {margin:5px;}
+section {display:none; margin:30px; padding:20px; background:white; border-radius:20px; box-shadow:0 8px 16px rgba(0,0,0,0.15); animation:fadeIn 0.5s;}
+button {padding:10px 20px; font-size:16px; border:none; border-radius:12px; background:#ff66b2; color:white; cursor:pointer; margin:5px; transition:0.3s;}
+button:hover {background:#ff3385; transform:scale(1.05);} 
+input, select {padding:8px; font-size:16px; border-radius:8px; border:1px solid #ccc; margin:5px;}
+.active {display:block;}
+.badge {display:inline-block; padding:10px; background:gold; border-radius:15px; margin:5px;}
+@keyframes fadeIn {from{opacity:0;} to{opacity:1;}}
+</style>
+</head>
+<body>
+
+<header>
+💗 Skillify 💗<br>
+Slim leren op jouw niveau!
+</header>
+
+<nav>
+<button onclick="showSection('login')">🔐 Login</button>
+<button onclick="showSection('rekenen')">🔢 Rekenen</button>
+<button onclick="showSection('taal')">📖 Taal</button>
+<button onclick="showSection('spel')">🎮 Reactiespel</button>
+<button onclick="showDocentLogin()">👩‍🏫 Docenten</button>
+<button onclick="showSection('dashboard')">📊 Dashboard</button>
+</nav>
+
+<section id="login" class="active">
+<h2>Login leerling</h2>
+<input type="text" id="leerlingNaam" placeholder="Naam leerling">
+<button onclick="loginLeerling()">Start</button>
+<p id="loginText"></p>
+</section>
+
+<section id="rekenen">
+<h2>Rekenen</h2>
+<select id="niveau">
+<option value="10">Makkelijk</option>
+<option value="50">Gemiddeld</option>
+<option value="100">Moeilijk</option>
+</select>
+<button onclick="generateSum()">Nieuwe som</button>
+<h3 id="som"></h3>
+<input type="number" id="rekAntwoord">
+<button onclick="checkRekenen()">Controleer</button>
+<p id="rekResult"></p>
+</section>
+
+<section id="taal">
+<h2>Taal</h2>
+<h3 id="woord"></h3>
+<input type="text" id="taalAntwoord">
+<button onclick="checkTaal()">Controleer</button>
+<p id="taalResult"></p>
+<button onclick="nieuwWoord()">Nieuw woord</button>
+</section>
+
+<section id="spel">
+<h2>Reactiespel</h2>
+<p>Klik als de knop groen wordt!</p>
+<button id="klikKnop" onclick="klikSpel()">Wacht...</button>
+<p id="spelResult"></p>
+</section>
+
+<section id="docentLogin">
+<h2>Docenten toegang</h2>
+<input type="password" id="docentCode" placeholder="Voer code in">
+<button onclick="checkDocentCode()">Login</button>
+<p id="docentFout"></p>
+</section>
+
+<section id="docent">
+<h2>Docenten Portaal</h2>
+<input type="text" id="opdracht" placeholder="Naam opdracht">
+<input type="date" id="datum">
+<button onclick="planOpdracht()">Inplannen</button>
+<ul id="opdrachtLijst"></ul>
+</section>
+
+<section id="dashboard">
+<h2>Dashboard</h2>
+<p>Leerling: <span id="dashNaam"></span></p>
+<p>Score: <span id="score">0</span></p>
+<div id="badges"></div>
+<canvas id="grafiek" width="300" height="200"></canvas>
+</section>
+
+<audio id="goedGeluid" src="https://www.soundjay.com/buttons/sounds/button-4.mp3"></audio>
+<audio id="foutGeluid" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
+
+<script>
+let score=0;
+let voortgang=[];
+let leerling="";
+let chart;
+
+function showSection(id){document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+
+function loginLeerling(){leerling=document.getElementById('leerlingNaam').value;loginText.innerHTML="Welkom "+leerling;dashNaam.innerHTML=leerling;showSection('rekenen');}
+
+function addScore(){score+=10;voortgang.push(score);document.getElementById('score').innerText=score;document.getElementById('goedGeluid').play();if(score>=50){document.getElementById('badges').innerHTML='<div class="badge">🏆 Topper!</div>';}updateChart();}
+
+function updateChart(){if(chart){chart.destroy();}chart=new Chart(document.getElementById('grafiek'),{type:'line',data:{labels:voortgang.map((_,i)=>i+1),datasets:[{label:'Score',data:voortgang}]},options:{responsive:false}});}
+
+let currentAnswer;let rekFouten=0;
+function generateSum(){let max=document.getElementById('niveau').value;let a=Math.floor(Math.random()*max);let b=Math.floor(Math.random()*max);currentAnswer=a+b;som.innerHTML=a+" + "+b;rekFouten=0;rekResult.innerHTML="";}
+function checkRekenen(){let ans=document.getElementById('rekAntwoord').value;if(ans==currentAnswer){rekResult.innerHTML="✅ Goed!";addScore();}else{document.getElementById('foutGeluid').play();rekFouten++;if(rekFouten>=3){rekResult.innerHTML="❌ Juiste antwoord: "+currentAnswer;}else{rekResult.innerHTML="❌ Probeer opnieuw.";}}}
+
+let woorden=["B _ O M","H _ I S","K A _ T"];let antwoorden=["o","u","a"];let woordIndex=0;let taalFouten=0;
+function nieuwWoord(){woordIndex=Math.floor(Math.random()*woorden.length);woord.innerHTML=woorden[woordIndex];taalFouten=0;taalResult.innerHTML="";}
+function checkTaal(){let ans=document.getElementById('taalAntwoord').value.toLowerCase();if(ans==antwoorden[woordIndex]){taalResult.innerHTML="✅ Goed!";addScore();}else{document.getElementById('foutGeluid').play();taalFouten++;if(taalFouten>=3){taalResult.innerHTML="❌ Juiste antwoord: "+antwoorden[woordIndex];}else{taalResult.innerHTML="❌ Probeer opnieuw.";}}}
+nieuwWoord();
+
+let spelActief=false;
+function startSpel(){let knop=document.getElementById('klikKnop');knop.style.background='gray';knop.innerHTML='Wacht...';spelResult.innerHTML='';spelActief=false;setTimeout(()=>{knop.style.background='green';knop.innerHTML='KLIK!';spelActief=true;},Math.random()*3000+2000);} 
+function klikSpel(){if(!spelActief){spelResult.innerHTML='Te vroeg!';}else{spelResult.innerHTML='Goed! +10 punten';addScore();startSpel();}}
+startSpel();
+
+function showDocentLogin(){showSection('docentLogin');}
+function checkDocentCode(){let code=document.getElementById('docentCode').value;if(code==="0000"){showSection('docent');docentFout.innerHTML="";}else{docentFout.innerHTML="❌ Verkeerde code";}}
+
+function planOpdracht(){let naam=document.getElementById('opdracht').value;let datum=document.getElementById('datum').value;if(naam&&datum){let li=document.createElement('li');li.innerHTML=naam+" - "+datum;opdrachtLijst.appendChild(li);}}
+
+generateSum();
+</script>
+
+</body>
+</html>
